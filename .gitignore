@@ -1,0 +1,13 @@
+.classpath
+.project
+.settings/
+*.class
+bin/
+
+# IDE stuff
+.vscode
+
+# Mac stuff
+desktop.ini
+.DS_Store
+*/DS_Store
