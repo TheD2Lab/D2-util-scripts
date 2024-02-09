@@ -3,7 +3,7 @@ import sys
 
 def replace_substring(filename: str, old_string: str, new_string: str='', dir: str=''):
    """
-   Renames a file by removing a substring
+   Renames a file by replacing a substring
 
    Parameters:
       filename (str): name of the file to rename
@@ -19,7 +19,7 @@ def replace_substring(filename: str, old_string: str, new_string: str='', dir: s
 
 def multi_remove(dir: str, substring: str):
    """
-   Removed a substring from the filename of all files in a directory
+   Removes a substring from the filename of all files in a directory
 
    Parameter:
       dir (str): target directory
