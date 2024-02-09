@@ -28,7 +28,6 @@ def aggregate_files(in_dir: str, out_dir: str, patterns: list[str]):
    print(f"Files copied to {out_dir}")
 
 
-
 if __name__ == '__main__':
    '''
    Copies files that match patterns to another directory
