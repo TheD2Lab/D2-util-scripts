@@ -70,7 +70,7 @@ def run_directory(in_dir: str, out_file: str):
          all_data = single
       else:
          all_data = pd.concat([all_data, single])
-   all_data.to_csv(out_file)
+   all_data.to_csv(out_file, index=False)
    
          
 if __name__ == "__main__":
