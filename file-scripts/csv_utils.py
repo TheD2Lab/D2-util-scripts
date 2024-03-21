@@ -51,13 +51,6 @@ def directory_concat(in_dir: str, out_file: str, include: str ='*.csv', exclude:
       walk (bool): whether to walk through subdirectories
       add_pid (bool): whether to add participant id
    """
-   # inner function to find and filter files according to patterns
-   def glob_filter(dir: str, add_pattern: str, remove_pattern: str) -> list[str]:
-      temp_files = glob(os.path.join(dir,add_pattern))
-      if exclude: # not an empty string
-         temp_files = filter(lambda f: remove_pattern not in f, temp_files)
-      return temp_files
-
    if "csv" not in include:
       print("Provided pattern does not look for csv files")
       return
@@ -66,7 +59,7 @@ def directory_concat(in_dir: str, out_file: str, include: str ='*.csv', exclude:
 
    if walk: 
       # look through subdirectories
-      for dir, a, b in os.walk(in_dir):
+      for dir, _, _ in os.walk(in_dir):
          in_files.extend(glob_filter(dir, include, exclude))
    else:
       in_files.extend(glob_filter(dir, include, exclude))
@@ -75,6 +68,13 @@ def directory_concat(in_dir: str, out_file: str, include: str ='*.csv', exclude:
       multi_concat(in_files, out_file, add_pid)
    else: # in_file empty
       print(f"No files matched \"{include}")
+
+
+def glob_filter(dir: str, add_pattern: str, remove_pattern: str = "") -> list[str]:
+      temp_files = glob(os.path.join(dir,add_pattern))
+      if remove_pattern: # not an empty string
+         temp_files = filter(lambda f: remove_pattern not in f, temp_files)
+      return temp_files
 
 
 if __name__ == '__main__':
