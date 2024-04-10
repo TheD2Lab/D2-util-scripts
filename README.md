@@ -8,6 +8,7 @@ Various utility scripts used in the lab
 - **aggregate_files.py**: *copy files to new directory using pattern matching*
 - **csv_utils.py**: *modify/combine contents of csv files using pattern matching*
 - **rename_files**: *rename files in directory using pattern matching*
+- **Per_AOI_Data_Compiler**: *java software used to compile pilot data with AOI descriptive gaze measures and AOI transition data*
 
 **ils-scritps/**: *programs for the Boeing ILS project*
 
