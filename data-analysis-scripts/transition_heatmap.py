@@ -7,6 +7,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from PIL import Image
 
+metric = 'Proportion excluding self-transitions'
+
 def parse_transitions(in_csv: str, aois: list[str]) -> pd.DataFrame:
    """
    Parses transition feature results to create tabular data for heat map. 
@@ -25,7 +27,7 @@ def parse_transitions(in_csv: str, aois: list[str]) -> pd.DataFrame:
 
    for index, row in all_data.iterrows():
       aoi_pair = [aoi.strip() for aoi in row['AOI Pair'].split('->')]
-      hm_table.at[aoi_pair[0], aoi_pair[1]] = row['Proportion including self-transitions']
+      hm_table.at[aoi_pair[0], aoi_pair[1]] = row[metric]
    hm_table=hm_table.round(3)
    return hm_table
 
@@ -52,28 +54,39 @@ def draw_heatmap(tabular_hm: pd.DataFrame, out_file: str, top_title="heatmap", s
    figure.set_title(top_title, pad=25)
    figure.xaxis.tick_top()
    figure.tick_params(length=0)
-   plt.savefig(out_file)
+   plt.savefig(out_file, dpi=300)
    if show:
       plt.show()
    plt.clf() # clear figure for next run
    return out_file
 
 
-def draw_directory(in_dir: str, aoi_csv: str, include: str="", exclude: str="", out_dir: str="./"):
+def draw_directory(in_dir: str, aoi_csv: str, out_dir: str="./", title: str="Transitions", include: str="", exclude: str=""):
+   """
+   Creates a heatmap for all transition files in a directory.
 
+   Parameters:
+   in_dir(str): the directory to read data from
+   aoi_csv(str): csv with list of aois
+   out_dir(str): directory to save output files to
+   title(str): heatmap title
+   include(str): filename wild cards to include
+   exclude(str): filename wild cards to exclude
+   """
    in_files = []
 
-   for dir, a, b in os.walk(in_dir):
-         in_files.extend(glob_filter(dir, include, exclude))
+   for dir,_,_ in os.walk(in_dir):
+      in_files.extend(glob_filter(dir, include, exclude))
+
    in_files.sort()
    drawings = [] 
    for f in in_files:
       id = os.path.basename(f).split('_')[0]
-      title = f"{id} Transition Proportions"
+      chart_title = f"{id} {title}"
       aois = read_aois_from_file(aoi_csv)  
       df = parse_transitions(f, aois)
-      out_file = os.path.join(out_dir, title.replace(" ", "_") + ".png")
-      drawings.append(Image.open(draw_heatmap(df, out_file, title)))
+      out_file = os.path.join(out_dir, chart_title.replace(" ", "_") + ".png")
+      drawings.append(Image.open(draw_heatmap(df, out_file, chart_title)))
 
    pdf_path = os.path.join(out_dir, "all_heatmaps.pdf")
    drawings[0].save(
@@ -109,6 +122,15 @@ def avg_directory(
       exclude: str=""
 ):
    """
+   Creates a heatmap of averages of transition data from a directory.
+
+   Parameters:
+   in_dir(str): the directory to read data from
+   aoi_csv(str): csv with list of aois
+   out_file(str): were to save the heatmap
+   title(str): heatmap title
+   include(str): filename wild cards to include
+   exclude(str): filename wild cards to exclude
    """
    aois = read_aois_from_file(aoi_csv)
 
@@ -121,24 +143,27 @@ def avg_directory(
    for file in in_files:
       hm_table = hm_table.add(parse_transitions(file, aois))
 
-   hm_table= hm_table.div(len(in_files)).round(3)
+   hm_table= hm_table.div(len(in_files)).round(2)
    draw_heatmap(hm_table, out_file, title, True)
    
+
 if __name__ == '__main__':
    """
    Update the code here to run new graphs. 
    TODO: support command line arguments
    """
-   draw_directory(
-      '/Users/ashleyjones/Desktop/approach_gaze_analysis/all/',
-      '/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/aoi_list.csv',
-      "*aoi_transitionFeatures.csv",
-      out_dir='./local/'
-   )
    avg_directory(
-      '/Users/ashleyjones/Desktop/approach_gaze_analysis/all/',
-      '/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/aoi_list.csv',
-      out_file='/Users/ashleyjones/Desktop/approach_gaze_analysis/all/transition_hm.png',
+      in_dir='/Users/ashleyjones/Documents/CSULB/EyeTracking/approach_gaze/results',
+      aoi_csv='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/aoi_list.csv',
+      out_file='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/transition_hm.png',
       title='All Pilots Transition Proportions',
-      include='*aoi_transitionFeatures.csv'
+      include='*AOI_Transitions.csv'
    )
+
+   # draw_directory(
+   #    in_dir='/Users/ashleyjones/Documents/CSULB/EyeTracking/approach_gaze/results',
+   #    aoi_csv='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/aoi_list.csv',
+   #    out_dir='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/',
+   #    title='Transition Proportions',
+   #    include='*AOI_Transitions.csv'
+   # )
