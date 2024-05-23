@@ -3,6 +3,10 @@ Various utility scripts used in the lab
 
 ## Contents
 
+**data-analysis-scripts**: *programs that preform analysis or generate graphs*
+
+- **transition_heatmap.py**: *draws heatmaps of transition data*
+
 **file-scripts/**: *programs that modify files or directories*
 
 - **aggregate_files.py**: *copy files to new directory using pattern matching*
