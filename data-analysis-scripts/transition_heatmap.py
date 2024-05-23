@@ -36,7 +36,6 @@ def parse_transitions(in_csv: str, aois: list[str]) -> pd.DataFrame:
    for index, row in all_data.iterrows():
       aoi_pair = [aoi.strip() for aoi in row['AOI Pair'].split('->')]
       hm_table.at[aoi_pair[0], aoi_pair[1]] = row[metric]
-   hm_table=hm_table.round(3)
    return hm_table
 
 
@@ -64,7 +63,7 @@ def draw_heatmap(tabular_hm: pd.DataFrame, out_file: str, top_title="heatmap", s
       mask = np.triu(np.ones_like(mask))
    elif apply_mask == Masks.LOWER_TRI:
       mask = np.tril(np.ones_like(mask))
-   figure = sns.heatmap(tabular_hm, cmap='Blues', annot=True, fmt="g", mask=mask)
+   figure = sns.heatmap(tabular_hm, cmap='Blues', annot=True, mask=mask, vmin=0, vmax=.5)
    plt.rcParams.update({'axes.titlesize':16})
    # use commented line if not setting specific title breaks
    # figure.set_title('\n'.join(wrap(top_title,40)), pad=25)
@@ -180,10 +179,10 @@ if __name__ == '__main__':
    TODO: support command line arguments or a gui
    """
    avg_directory(
-      in_dir='/Users/ashleyjones/Documents/CSULB/EyeTracking/approach_gaze/high_workload',
+      in_dir='/Users/ashleyjones/Documents/CSULB/EyeTracking/approach_gaze/unsuccessful',
       aoi_csv='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/aoi_list.csv',
-      out_file='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/lowWorkload_heatmap_transitions.png',
-      title='Low Workload Group \nMean Transition Proportions',
+      out_file='/Users/ashleyjones/Documents/CSULB/EyeTracking/D2-util-scripts/local/unSuccessful_heatmap_transitions.png',
+      title='Unsuccessful Group \nMean Transition Proportions',
       include='*AOI_Transitions.csv',
       apply_mask=Masks.DIAGONAL
    )
