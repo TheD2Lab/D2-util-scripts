@@ -3,7 +3,14 @@ Various utility scripts used in the lab
 
 ## Contents
 
-**data-analysis-scripts**: *programs that preform analysis or generate graphs*
+**data-analysis-scripts/**: *programs that preform analysis or generate graphs*
+
+- **spss-scripts/**: *SPSS Syntax files*
+
+  - **add_aoi_labels.sps**: *Adds variable labels to AOI data in a sav file*
+  - **add_DGM_labels.sps**: *Adds variable labels to whole screen DGM data in a sav file*
+  - **prefix_variable_name.sps**: *Adds a prefix to variables names in a sav file*
+  - **ttest_script.sps**: *Performs t-tests*
 
 - **transition_heatmap.py**: *draws heatmaps of transition data*
 
@@ -14,10 +21,11 @@ Various utility scripts used in the lab
 - **rename_files**: *rename files in directory using pattern matching*
 - **Per_AOI_Data_Compiler**: *java software used to compile pilot data with AOI descriptive gaze measures and AOI transition data*
 
-**ils-scritps/**: *programs for the Boeing ILS project*
+**ils-scripts/**: *programs for the Boeing ILS project*
 
 - **XPlaneNetworkOutput.py**: *communicate with XPlane over network*
 - **data_processing_by_daniel**
+
 
 ## Notes:
 1. Please keep scripts organized in appropriate folders.
