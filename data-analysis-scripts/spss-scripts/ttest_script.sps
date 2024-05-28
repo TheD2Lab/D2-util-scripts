@@ -45,34 +45,88 @@ IS_EQUAL_VAR_COL = 3
 VAR_COL = 1
 
 # variables between start_var and end_var in the .sav file will be included
-START_VAR = 'to_AI_Transitions_count'
-END_VAR = 'to_RPM_Proportion_excluding_selftransitions'
+START_VAR = 'Total_Number_of_Fixations'
+END_VAR = 'average_pupil_size_of_both_eyes'
 
 # set how output is saved
 OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/outputs/'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
-OUTPUT_SUFFIX = 'PTM'
+OUTPUT_SUFFIX = 'DGM'
 
 # set groups to perform tests for
 GROUPS = [
   TestGroup(
+    group_var='TLX_Overall_Workload_Binned',
+    group_values=(1,2),
+    sub_dir='tlx-overall-workload-group',
+    group_id='tlxWorkload',
+  ),
+  TestGroup(
     group_var='pilot_success',
     group_values=(1,2),
-    sub_dir='pilot-success-group/',
+    sub_dir='pilot-success-group',
     group_id='pilotSuccess'
   ),
-  # TestGroup(
-  #   group_var='Instrument_Rating',
-  #   group_values=[0,1],
-  #   sub_dir='instrument-rating-group/t-tests',
-  #   group_id='instrumentRating'
-  # ),
-  # TestGroup(
-  #   group_var='Commercial_License',
-  #   group_values=[0,1],
-  #   sub_dir='commercial-license-group',
-  #   group_id='commercialLicense'
-  # )
+  TestGroup(
+    group_var='Instrument_Rating',
+    group_values=(0,1),
+    sub_dir='instrument-rating-group',
+    group_id='instrument'
+  ),
+  TestGroup(
+    group_var='Commercial_License',
+    group_values=(0,1),
+    sub_dir='commercial-license-group',
+    group_id='commercial'
+  ),
+  TestGroup(
+    group_var='Airline_Transport_Pilot',
+    group_values=(0,1),
+    sub_dir='airline-transport-pilot-group',
+    group_id='ATP',
+  ),
+  TestGroup(
+    group_var='Multi_Engine',
+    group_values=(0,1),
+    sub_dir='multi-engine-rating-group',
+    group_id='multiEngine',
+  ),
+  TestGroup(
+    group_var='Complex_Endorsement',
+    group_values=(0,1),
+    sub_dir='complex-endorsement-group',
+    group_id='complex',
+  ),
+  TestGroup(
+    group_var='High_Performance_Endorsement',
+    group_values=(0,1),
+    sub_dir='high-performance-endorsement-group',
+    group_id='highPerformance',
+  ),
+  TestGroup(
+    group_var='CFI',
+    group_values=(0,1),
+    sub_dir='certified-flight-instructor-group',
+    group_id='CFI',
+  ),
+  TestGroup(
+    group_var='CFII',
+    group_values=(0,1),
+    sub_dir='certified-flight-instrument-instructor-group',
+    group_id='CFII',
+  ),
+  TestGroup(
+    group_var='Q7_Regroup',
+    group_values=(1,2),
+    sub_dir='quiz-question-7',
+    group_id='quiz7',
+  ),
+  TestGroup(
+    group_var='Q8_Green_Or_Magenta_num',
+    group_values=(1,3),
+    sub_dir='quiz-question-8',
+    group_id='quiz8',
+  ),
 ]
 
 # data files run through. Structure each entry as:
@@ -86,7 +140,7 @@ DATA_SETS = [
   ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
   ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
   ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
-  # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav']
+  ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav']
 ]
 
 def run_ttest(group: TestGroup, variables, prefix):
@@ -157,9 +211,12 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
   # Get labels.
   spss.StartDataStep()
   data_set = spss.Dataset()
+  group_label = data_set.varlist[group.group_var].label
   for var in variables:
     var.label = data_set.varlist[var.name].label
   spss.EndDataStep()
+
+  ESCAPE_QUOTE = '\\"'
 
   # graph boxplot
   for var in variables:
@@ -169,8 +226,7 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
           MISSING=LISTWISE REPORTMISSING=NO
         /GRAPHSPEC SOURCE=INLINE.
       BEGIN GPL
-        DATA: id=col(source(s), name("$CASENUM"), unit.category())
-        GUIDE: axis(dim(1), label("Pilot Category (p<{"0.01" if var.p_value<0.01 else "0.05"})"))
+        GUIDE: axis(dim(1), label("{group_label.replace('"', ESCAPE_QUOTE)} (p<{"0.01" if var.p_value<0.01 else "0.05"})"))
         GUIDE: axis(dim(2), label("{var.label}"))
         SCALE: cat(dim(1), include("{str(group.group_values[0])}", "{str(group.group_values[1])}"))
         SCALE: linear(dim(2), include(0))
@@ -202,7 +258,7 @@ for g in GROUPS:
 
     spss.Submit('OUTPUT CLOSE *.')  # close the t-test output file
 
-    if sig_list:
+    if len(sig_list) > 0:
       generate_boxplots(sig_list, g, prefix)
       spss.Submit('OUTPUT CLOSE *.')  # close the boxplot output file
 
