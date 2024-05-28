@@ -45,13 +45,13 @@ IS_EQUAL_VAR_COL = 3
 VAR_COL = 1
 
 # variables between start_var and end_var in the .sav file will be included
-START_VAR = 'Total_Number_of_Fixations'
-END_VAR = 'average_pupil_size_of_both_eyes'
+START_VAR = 'Approach_Score'
+END_VAR = 'MAX_ILS_ABS_Bank_Angle'
 
 # set how output is saved
 OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/outputs/'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
-OUTPUT_SUFFIX = 'DGM'
+OUTPUT_SUFFIX = 'xplane'
 
 # set groups to perform tests for
 GROUPS = [
@@ -132,15 +132,17 @@ GROUPS = [
 # data files run through. Structure each entry as:
 # [Prefix on variable names (leave blank if none), Path to data file]
 DATA_SETS = [
-  ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
-  ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
-  ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
-  ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
-  ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
-  ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
-  ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
-  ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
-  ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav']
+  # ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
+  # ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
+  # ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
+  # ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
+  # ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
+  # ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
+  # ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
+  # ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
+  # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
+  ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
+  # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav'],
 ]
 
 def run_ttest(group: TestGroup, variables, prefix):
@@ -242,17 +244,13 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
 
 # start SPSS communication
 SpssClient.StartClient()
+for prefix, data_file in DATA_SETS:
+  spss.Submit(f"GET FILE = '{data_file}'")  # Open the sav (data) file
+  var_range = f'{prefix}{START_VAR} to {prefix}{END_VAR}' # Specify range of variables to tests.
+  variables = spssaux.VariableDict().expand(var_range) # get a list of variables test
 
-for g in GROUPS:
-  for prefix, data_file in DATA_SETS:
-    spss.Submit(f"GET FILE = '{data_file}'")  # Open the sav (data) file
-    var_range = f'{prefix}{START_VAR} to {prefix}{END_VAR}' # Specify range of variables to tests.
-
-    variables = spssaux.VariableDict().expand(var_range) # get a list of variables test
-
+  for g in GROUPS:
     run_ttest(group=g, variables=variables, prefix=prefix)
-
-    del variables, var_range # we don't need these anymore
 
     sig_list = find_significant_vars()  # get the statistically sig variables
 
