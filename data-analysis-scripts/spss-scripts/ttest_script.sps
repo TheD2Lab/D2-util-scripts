@@ -45,13 +45,16 @@ IS_EQUAL_VAR_COL = 3
 VAR_COL = 1
 
 # variables between start_var and end_var in the .sav file will be included
-START_VAR = 'Approach_Score'
-END_VAR = 'MAX_ILS_ABS_Bank_Angle'
+START_VAR = 'Total_Number_of_Fixations'
+END_VAR = 'average_pupil_size_of_both_eyes'
 
 # set how output is saved
 OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/outputs/'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
-OUTPUT_SUFFIX = 'xplane'
+OUTPUT_SUFFIX = 'DGM'
+
+# set number of decimal places on y-axis
+DECIMAL_PLACES = 0
 
 # set groups to perform tests for
 GROUPS = [
@@ -132,16 +135,16 @@ GROUPS = [
 # data files run through. Structure each entry as:
 # [Prefix on variable names (leave blank if none), Path to data file]
 DATA_SETS = [
-  # ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
-  # ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
-  # ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
-  # ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
-  # ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
-  # ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
-  # ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
-  # ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
-  # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
-  ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
+  ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
+  ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
+  ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
+  ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
+  ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
+  ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
+  ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
+  ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
+  ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
+  # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
   # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav'],
 ]
 
@@ -167,9 +170,9 @@ def run_ttest(group: TestGroup, variables, prefix):
       /DELETEOBJECT DELETE=NO
       /OBJECTPROPERTIES   VISIBLE=ASIS
       /TABLECELLS SELECT = ["Two-Sided p"] SELECTDIMENSION=COLUMNS FORMAT= 'f3.4'
-      /TABLECELLS SELECT=["Two-Sided p"] SELECTDIMENSION=COLUMNS SELECTCONDITION="0.015<=x<0.055"
+      /TABLECELLS SELECT=["Two-Sided p"] SELECTDIMENSION=COLUMNS SELECTCONDITION="0.01<=x<0.05"
       BACKGROUNDCOLOR=RGB(251, 248, 115) APPLYTO=CELL
-      /TABLECELLS SELECT=["Two-Sided p"] SELECTDIMENSION=COLUMNS SELECTCONDITION="0.0<=x<0.015"
+      /TABLECELLS SELECT=["Two-Sided p"] SELECTDIMENSION=COLUMNS SELECTCONDITION="0.0<=x<0.01"
       BACKGROUNDCOLOR=RGB(112, 220, 132) APPLYTO=CELL.
 
     OUTPUT SAVE OUTFILE = '{directory}/ttests_{group.group_id}_{prefix}{OUTPUT_SUFFIX}.spv'.
@@ -223,6 +226,7 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
   # graph boxplot
   for var in variables:
     syntax = f"""
+      FORMATS {var.name} (f2.{DECIMAL_PLACES}).
       GGRAPH
         /GRAPHDATASET NAME="graphdataset" VARIABLES= {group.group_var} {var.name}
           MISSING=LISTWISE REPORTMISSING=NO
@@ -260,7 +264,7 @@ for prefix, data_file in DATA_SETS:
       generate_boxplots(sig_list, g, prefix)
       spss.Submit('OUTPUT CLOSE *.')  # close the boxplot output file
 
-    spss.Submit('DATASET CLOSE *.') # close the active data set
+  spss.Submit('DATASET CLOSE *.') # close inactive datasets
 
 # End SPSS Communication
 SpssClient.StopClient()
