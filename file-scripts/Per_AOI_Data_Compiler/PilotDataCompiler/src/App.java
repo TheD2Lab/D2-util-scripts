@@ -87,7 +87,7 @@ public class App {
 
         if (!doneHeaders) { //Adds AOI DGM headers if they have not been added already
             for (int i = 0; i < dgm.get(0).size(); i++) {
-                headers.add(processHeader("aoi_" + dgm.get(0).get(i)));
+                headers.add(processHeader("aoi_" + dgm.get(0).get(i).replace(".", "")));
             }
         }
 
