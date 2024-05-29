@@ -215,10 +215,21 @@ def generate_boxplots(variables: list[VariableInfo], group: TestFactor, prefix):
 # start SPSS communication
 SpssClient.StartClient()
 
-# start SPSS communication
-SpssClient.StartClient()
-for prefix, data_file in DATA_SETS:
-  spss.Submit(f"GET FILE = '{data_file}'")  # Open the sav (data) file
+for i, [prefix, data_file] in enumerate(DATA_SETS):
+
+  if i > 0: # close the previous dataset
+    spss.Submit(f"DATASET CLOSE copy{i-1}")
+
+  # open the dataset and make a copy to protect it
+  syntax = f"""
+    GET FILE = '{data_file}'.
+    DATASET NAME original{i}.
+    DATASET COPY copy{i}.
+    DATASET ACTIVATE copy{i}.
+    DATASET CLOSE original{i}.
+  """
+  spss.Submit(syntax)
+
   var_range = f'{prefix}{START_VAR} to {prefix}{END_VAR}' # Specify range of variables to tests.
   variables = spssaux.VariableDict().expand(var_range) # get a list of variables test
 
