@@ -9,8 +9,10 @@ Various utility scripts used in the lab
 
   - **add_aoi_labels.sps**: *Adds variable labels to AOI data in a sav file*
   - **add_DGM_labels.sps**: *Adds variable labels to whole screen DGM data in a sav file*
+  - **anova_script.sps**: *Performs ANOVA tests and automatically generates box plots*
+  - **bulk_merge_datasets.sps**: *Merge variables from one file into multiple other files on a primary key*
   - **prefix_variable_name.sps**: *Adds a prefix to variables names in a sav file*
-  - **ttest_script.sps**: *Performs t-tests*
+  - **ttest_script.sps**: *Performs t-tests and automatically generates box plots*
 
 - **transition_heatmap.py**: *draws heatmaps of transition data*
 

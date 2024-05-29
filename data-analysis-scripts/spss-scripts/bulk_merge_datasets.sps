@@ -4,6 +4,8 @@ import spss
 
 '''
 Merges variables from a sav file into a list of other sav files based on the key/variables.
+This is useful for adding categorical/grouping variables to datasets containing scale variables for
+performing t-tests.
 
 How to run:
 1. Update sav file paths.
