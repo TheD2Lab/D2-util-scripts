@@ -60,42 +60,42 @@ TEMPLATE_FILE = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/Graph
 FACTORS = [
   TestFactor(
     var_name='Expertise_Category',
-    sub_dir='instrument-and-currency-factor',
+    sub_dir='instrument-and-currency-group',
     factor_id='instrumentCurrency',
   ),
   TestFactor(
     var_name='FAA_Sim_Hours_num',
-    sub_dir='faa-sim-hours-factor',
+    sub_dir='faa-sim-hours-group',
     factor_id='faaSim'
   ),
   TestFactor(
     var_name='Home_Sim_Regroup',
-    sub_dir='home-simulator-usage-factor',
+    sub_dir='home-simulator-usage-group',
     factor_id='homeSim',
   ),
   TestFactor(
     var_name='Video_Game_Regroup',
-    sub_dir='video-game-usage-factor',
+    sub_dir='video-game-usage-group',
     factor_id='videoGame'
   ),
   TestFactor(
     var_name='Sleepiness_Change',
-    sub_dir='sleepiness-change-factor',
+    sub_dir='sleepiness-change-group',
     factor_id='sleepChange'
   ),
   TestFactor(
     var_name='Q3_Glidespeed_num',
-    sub_dir='quiz-question-3-factor',
+    sub_dir='quiz-question-3-group',
     factor_id='quiz3'
   ),
   TestFactor(
     var_name='Q9_Regroup',
-    sub_dir='quiz-question-9-factor',
+    sub_dir='quiz-question-9-group',
     factor_id='quiz9'
   ),
   TestFactor(
     var_name='Q10_Regroup',
-    sub_dir='quiz-question-10-factor',
+    sub_dir='quiz-question-10-group',
     factor_id='quiz10'
   )
 ]
