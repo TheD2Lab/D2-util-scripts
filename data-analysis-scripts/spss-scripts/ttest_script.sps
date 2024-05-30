@@ -11,7 +11,8 @@ from pathlib import Path
   3. Set groups to compare (numbers are mapped to values in the sav file. Short string may work as well).
   4. Set output file naming scheme.
   5. Set input files to run test on.
-  6. Select/Highlight program in the SPSS viewer and hit run to generate output (.spv) file.
+  6. Set template file (.sgt) to define box plot styles.
+  7. Select/Highlight program in the SPSS viewer and hit run to generate output (.spv) file.
 
   Note: Make sure your output directory exist
 '''
@@ -45,16 +46,16 @@ IS_EQUAL_VAR_COL = 3
 VAR_COL = 1
 
 # variables between start_var and end_var in the .sav file will be included
-START_VAR = 'Total_Number_of_Fixations'
-END_VAR = 'average_pupil_size_of_both_eyes'
+START_VAR = 'Proportion_of_fixations_spent_in_AOI'
+END_VAR = 'to_RPM_Proportion_excluding_selftransitions'
 
 # set how output is saved
-OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/outputs/'
+OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/population-comparison'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
-OUTPUT_SUFFIX = 'DGM'
+OUTPUT_SUFFIX = 'PTM'
 
-# set number of decimal places on y-axis
-DECIMAL_PLACES = 0
+# Graph template file to use (can set scales, colors, etc)
+TEMPLATE_FILE = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/Graph_Templates/no_decimal_axis.sgt'
 
 # set groups to perform tests for
 GROUPS = [
@@ -81,12 +82,6 @@ GROUPS = [
     group_values=(0,1),
     sub_dir='commercial-license-group',
     group_id='commercial'
-  ),
-  TestGroup(
-    group_var='Airline_Transport_Pilot',
-    group_values=(0,1),
-    sub_dir='airline-transport-pilot-group',
-    group_id='ATP',
   ),
   TestGroup(
     group_var='Multi_Engine',
@@ -121,13 +116,13 @@ GROUPS = [
   TestGroup(
     group_var='Q7_Regroup',
     group_values=(1,2),
-    sub_dir='quiz-question-7',
+    sub_dir='quiz-question-7-group',
     group_id='quiz7',
   ),
   TestGroup(
     group_var='Q8_Green_Or_Magenta_num',
     group_values=(1,3),
-    sub_dir='quiz-question-8',
+    sub_dir='quiz-question-8-group',
     group_id='quiz8',
   ),
 ]
@@ -143,7 +138,7 @@ DATA_SETS = [
   ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
   ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
   ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
-  ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
+  # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
   # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
   # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav'],
 ]
@@ -155,7 +150,7 @@ def run_ttest(group: TestGroup, variables, prefix):
   Parameters:
     group (TestGroup)
   '''
-  directory = OUTPUT_DIR+group.sub_dir+'/ttests'
+  directory = OUTPUT_DIR+'/'+group.sub_dir+'/ttests'
   Path(directory).mkdir(parents=True, exist_ok=True)
   syntax = f"""
     T-TEST GROUPS={group.group_var}({group.group_values[0]} {group.group_values[1]})
@@ -208,7 +203,7 @@ def find_significant_vars() -> list[VariableInfo]:
   return stat_sig
 
 def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
-  directory = OUTPUT_DIR+group.sub_dir+'/boxplots'
+  directory = OUTPUT_DIR+'/'+group.sub_dir+'/boxplots'
   Path(directory).mkdir(exist_ok=True)
 
   # Note: Cannot use spss.Submit inside DataStep, so use two loops
@@ -226,11 +221,11 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
   # graph boxplot
   for var in variables:
     syntax = f"""
-      FORMATS {var.name} (f2.{DECIMAL_PLACES}).
       GGRAPH
         /GRAPHDATASET NAME="graphdataset" VARIABLES= {group.group_var} {var.name}
           MISSING=LISTWISE REPORTMISSING=NO
-        /GRAPHSPEC SOURCE=INLINE.
+        /GRAPHSPEC SOURCE=INLINE
+        TEMPLATE=["{TEMPLATE_FILE}"].
       BEGIN GPL
         GUIDE: axis(dim(1), label("{group_label.replace('"', ESCAPE_QUOTE)} (p<{"0.01" if var.p_value<0.01 else "0.05"})"))
         GUIDE: axis(dim(2), label("{var.label}"))
@@ -245,7 +240,6 @@ def generate_boxplots(variables: list[VariableInfo], group: TestGroup, prefix):
     OUTPUT SAVE OUTFILE = '{directory}/boxplots_{group.group_id}_{prefix}{OUTPUT_SUFFIX}.spv'.
   """
   spss.Submit(syntax)
-
 
 # start SPSS communication
 SpssClient.StartClient()
@@ -263,7 +257,8 @@ for i, [prefix, data_file] in enumerate(DATA_SETS):
     DATASET ACTIVATE copy{i}.
     DATASET CLOSE original{i}.
   """
-  spss.Submit(syntax)  # Open the sav (data) file
+  spss.Submit(syntax)
+
   var_range = f'{prefix}{START_VAR} to {prefix}{END_VAR}' # Specify range of variables to tests.
   variables = spssaux.VariableDict().expand(var_range) # get a list of variables test
 

@@ -11,7 +11,8 @@ from pathlib import Path
   3. Set factors/variables to test.
   4. Set output file naming scheme.
   5. Set input files to run tests on.
-  6. Select/Highlight program in the SPSS viewer and hit run to generate output (.spv) file.
+  6. Set the template file (.sgt) to define box plot styles.
+  7. Select/Highlight program in the SPSS viewer and hit run to generate output (.spv) file.
 
   Note: Make sure your base output directory exist
 '''
@@ -43,15 +44,17 @@ BETWEEN_GROUPS_COL = 3
 VAR_COL = 1
 
 # variables between start_var and end_var in the .sav file will be included
-START_VAR = 'Proportion_of_fixations_spent_in_AOI'
-END_VAR = 'to_RPM_Proportion_excluding_selftransitions'
+START_VAR = 'Approach_Score'
+END_VAR = 'MAX_ILS_ABS_Bank_Angle'
+
 
 # set how output is saved
-OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/outputs/'
+OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/population-comparison/'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
-OUTPUT_SUFFIX = 'PTM'
+OUTPUT_SUFFIX = 'xplane'
 
-DECIMAL_PLACES = 0  # the number of decimal places on the y-axis
+# Graph template file to use (can set scales, colors, etc)
+TEMPLATE_FILE = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/Graph_Templates/no_decimal_axis.sgt'
 
 # set groups to perform tests for
 FACTORS = [
@@ -100,16 +103,16 @@ FACTORS = [
 # data files run through. Structure each entry as:
 # [Prefix on variable names (leave blank if none), Path to data file]
 DATA_SETS = [
-  ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
-  ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
-  ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
-  ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
-  ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
-  ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
-  ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
-  ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
+  # ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
+  # ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
+  # ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
+  # ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
+  # ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
+  # ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
+  # ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
+  # ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
   # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
-  # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
+  ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
   # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav']
 ]
 
@@ -121,7 +124,7 @@ def run_anova(factor: TestFactor, variables, prefix):
     factor (TestFactor): grouping variables/factor
     variables (variables): expanded variables to test
   '''
-  directory = OUTPUT_DIR+factor.sub_dir+'/anova'
+  directory = OUTPUT_DIR+'/'+factor.sub_dir+'/anova'
   Path(directory).mkdir(parents=True, exist_ok=True)
   syntax = f"""
     ONEWAY {" ".join(variables)}
@@ -168,15 +171,15 @@ def find_significant_vars() -> list[VariableInfo]:
         raw_value = data_cells.GetValueAt(row, SIG_COL)
         try:
           p_value = float(raw_value)
-        except: # raw = <0.001
-          p_value = 0.0
+        except: # raw = '<0.001' occurs when all the values are 0 and isn't actually significant
+          p_value = 1 
         if (p_value < 0.05):
           stat_sig.append(VariableInfo(var, p_value))
 
   return stat_sig
 
 def generate_boxplots(variables: list[VariableInfo], group: TestFactor, prefix):
-  directory = OUTPUT_DIR+group.sub_dir+'/boxplots'
+  directory = OUTPUT_DIR+'/'+group.sub_dir+'/boxplots'
   Path(directory).mkdir(exist_ok=True)
 
   # Note: Cannot use spss.Submit inside DataStep, so use two loops
@@ -194,14 +197,15 @@ def generate_boxplots(variables: list[VariableInfo], group: TestFactor, prefix):
   # graph boxplot
   for var in variables:
     syntax = f"""
-      FORMATS {var.name} (f2.{DECIMAL_PLACES}).
       GGRAPH
         /GRAPHDATASET NAME="graphdataset" VARIABLES= {group.var_name} {var.name}
           MISSING=LISTWISE REPORTMISSING=NO
-        /GRAPHSPEC SOURCE=INLINE.
+        /GRAPHSPEC SOURCE=INLINE
+        TEMPLATE=["{TEMPLATE_FILE}"].
       BEGIN GPL
         GUIDE: axis(dim(1), label("{group_label.replace('"', ESCAPE_QUOTE)} (p<{"0.01" if var.p_value<0.01 else "0.05"})"))
         GUIDE: axis(dim(2), label("{var.label}"))
+        SCALE: linear(dim(2), include(0))
         ELEMENT: schema(position(bin.quantile.letter({group.var_name}*{var.name})))
       END GPL.
     """
@@ -243,8 +247,6 @@ for i, [prefix, data_file] in enumerate(DATA_SETS):
     if len(sig_list) > 0:
       generate_boxplots(sig_list, g, prefix)
       spss.Submit('OUTPUT CLOSE *.')  # close the boxplot output file
-
-  spss.Submit('DATASET CLOSE *.') # close non-active data sets
 
 # End SPSS Communication
 SpssClient.StopClient()
