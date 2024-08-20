@@ -3,6 +3,18 @@ from pathlib import Path
 import pandas as pd
 import csv_utils as cu
 
+"""
+If you have existing gaze data and do not want to have to draw AOIs in multiple GazePoint project to
+re-export the data with new AOIs, use this code.
+
+The AOI class use the same values from the GazePoint UI, so just modify code with your values.
+AOI rectangles exclude the right and bottom boarder from their area. This way you can have AOI right next to
+each other without having a multi-AOI data line.
+
+There are comments throughout the file that explain how to use each method and the reason for certain
+design choice.
+"""
+
 class AOI:
    def __init__(self, name: str, x: float, y: float, width: float, height: float):
       """
