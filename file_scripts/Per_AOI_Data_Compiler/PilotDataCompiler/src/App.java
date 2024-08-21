@@ -42,18 +42,17 @@ public class App {
                 singleAOIData.add(results);
             }
 
-            String aoiNoSpaces = aoiName.replace(" ", "");
+            String aoiNoSpaces = aoiName.replace(" ", "_"); // can't have spaces in var names
+            String aoiLower = aoiNoSpaces.toLowerCase();    // snake casing headers
             List<String> aoiHeaders = new LinkedList<>();
             for (String h : headers) {
-                aoiHeaders.add(h.replaceFirst("aoi", aoiNoSpaces));
+                aoiHeaders.add(h.replaceFirst("aoi", aoiLower));
             }
-
-            headers.addFirst("pid");
-
+            aoiHeaders.addFirst("pid");
             singleAOIData.addAll(0,Arrays.asList(aoiHeaders));
-            CSVHandler.writeToCSV(singleAOIData, OUTPUT_FOLDER + "/AOI_"+ aoiName +"_Pilot_Data.csv"); //Outputs the file for a single AOI
+            CSVHandler.writeToCSV(singleAOIData, OUTPUT_FOLDER + "/AOI_"+ aoiNoSpaces +"_Pilot_Data.csv"); //Outputs the file for a single AOI
         }
-
+        headers.addFirst("pid");
         outputData.addAll(0,Arrays.asList(headers));
         CSVHandler.writeToCSV(outputData, OUTPUT_FOLDER + "/AOI_Combined_Pilot_Data.csv"); //Outputs the file for all the combines AOIs.
         System.out.println("Data compilation completed.");
@@ -98,11 +97,12 @@ public class App {
 
         for (int i = 0; i < DataConfig.aoiNames.length; i++) { //Iterates overall all AOI names
             String toAOI = DataConfig.aoiNames[i];
+            String toAOIStyled = toAOI.replace(" ", "_").toLowerCase();
             if (!doneHeaders) { //Adds AOI transition headers if they have not been added already.
-                headers.add(processHeader("aoi_to_" + toAOI));
-                headers.add(processHeader("aoi_to_" + toAOI + "_transitions_count"));
-                headers.add(processHeader("aoi_to_" + toAOI + "_proportion_including_self_transitions"));
-                headers.add(processHeader("aoi_to_" + toAOI + "_proportion_excluding_self_transitions"));
+                headers.add(processHeader("aoi_to_" + toAOIStyled));
+                headers.add(processHeader("aoi_to_" + toAOIStyled + "_transitions_count"));
+                headers.add(processHeader("aoi_to_" + toAOIStyled + "_proportion_including_self_transitions"));
+                headers.add(processHeader("aoi_to_" + toAOIStyled + "_proportion_excluding_self_transitions"));
             }
             for (int j = 0; j < transitionData.size(); j++) { //Adds transition data to the file if the line matches the current AOI pair (fromAOI to aoiName)
                 List<String> transition = transitionData.get(j);
