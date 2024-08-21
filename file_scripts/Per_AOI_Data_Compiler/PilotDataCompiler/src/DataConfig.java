@@ -1,10 +1,10 @@
 public abstract class DataConfig {
     static public String[] aoiNames = {
         "AI",
-        "No AOI",
+        "Undefined Area",
         "Alt_VSI",
         "ASI",
-        "Window",
+        "Windshield",
         "SSI",
         "TI_HSI",
         "RPM"

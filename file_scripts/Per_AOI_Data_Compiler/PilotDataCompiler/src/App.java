@@ -20,17 +20,17 @@ public class App {
     static ArrayList<List<String>> allData = new ArrayList<>();
     static ArrayList<String> headers;
     static boolean doneHeaders;
-    private static final String DATA_PATH = "/Users/ashleyjones/Documents/CSULB/EyeTracking/Data"; //Path to the folder containing the input
-    private static final String DGM_FOLDER = DATA_PATH + "/Gaze Analysis Results"; //Location of folder containing all the individually run DGMs (can be downloaded from the sharepoint as "ILS Approach DGMs (Single AOI)"
+    private static final String DATA_PATH = "/Users/ashleyjones/Documents/EyeTracking/Data"; //Path to the folder containing the input
+    private static final String DGM_FOLDER = DATA_PATH + "/ILS Approach Gaze Analysis Results (New AOI)"; //Location of folder containing all the individually run DGMs (can be downloaded from the sharepoint as "ILS Approach DGMs (Single AOI)"
     private static final String OUTPUT_FOLDER = DATA_PATH + "/Output"; //Output folder for all resulting CSVs to be generated in
-    private static final String PILOT_CSV_PATH = DATA_PATH + "/ILS_Pilot_Data_with_all_DGMs.csv"; //Path to the All_Pilot_Data CSV file
-    private static final int PILOT_COLUMNS = 58; //Number of columns to take from the All_Pilot_Data file. 58 columns includes all data prior to the overall approach DGMs.
+    // private static final String PILOT_CSV_PATH = DATA_PATH + "/ILS_Pilot_Data_with_all_DGMs.csv"; //Path to the All_Pilot_Data CSV file
+    // private static final int PILOT_COLUMNS = 58; //Number of columns to take from the All_Pilot_Data file. 58 columns includes all data prior to the overall approach DGMs.
     public static void main(String[] args) throws Exception {
         System.out.println("Beginning data compilation");
         doneHeaders = false; //Headers are taken from the existing files as the software runs. This flag ensures they are only copied over once.
         headers = new ArrayList<>();
         Files.createDirectories(Paths.get(OUTPUT_FOLDER));
-        allData = CSVHandler.csvToArrayList(PILOT_CSV_PATH);
+        // allData = CSVHandler.csvToArrayList(PILOT_CSV_PATH);
         ArrayList<List<String>> outputData = new ArrayList<>();
         for (int j = 0; j < DataConfig.aoiNames.length; j++) { //Iterate through all AOI names
             String aoiName = DataConfig.aoiNames[j];
@@ -48,6 +48,8 @@ public class App {
                 aoiHeaders.add(h.replaceFirst("aoi", aoiNoSpaces));
             }
 
+            headers.addFirst("pid");
+
             singleAOIData.addAll(0,Arrays.asList(aoiHeaders));
             CSVHandler.writeToCSV(singleAOIData, OUTPUT_FOLDER + "/AOI_"+ aoiName +"_Pilot_Data.csv"); //Outputs the file for a single AOI
         }
@@ -57,15 +59,16 @@ public class App {
         System.out.println("Data compilation completed.");
     }
 
-    static public ArrayList<String> generateAOILine(String pID, String aoiName, int pIDRow) {
-        ArrayList<String> result = new ArrayList<>();
-        List<String> dataLine = allData.get(pIDRow + 1);
-        for (int i = 0; i < PILOT_COLUMNS; i++) { //Adds headers from the pilot data.
-            result.add(dataLine.get(i));
-            if (!doneHeaders) {
-                headers.add(processHeader(allData.get(0).get(i))); 
-            }
-        }
+    static public List<String> generateAOILine(String pID, String aoiName, int pIDRow) {
+        List<String> result = new LinkedList<>();
+        result.add(pID);
+        // List<String> dataLine = allData.get(pIDRow + 1);
+        // for (int i = 0; i < PILOT_COLUMNS; i++) { //Adds headers from the pilot data.
+        //     result.add(dataLine.get(i));
+        //     if (!doneHeaders) {
+        //         headers.add(processHeader(allData.get(0).get(i))); 
+        //     }
+        // }
         
         
         String participantFolder = DGM_FOLDER + "/" + pID; //The folder containing the various CSVs for a particular participant
@@ -97,9 +100,9 @@ public class App {
             String toAOI = DataConfig.aoiNames[i];
             if (!doneHeaders) { //Adds AOI transition headers if they have not been added already.
                 headers.add(processHeader("aoi_to_" + toAOI));
-                headers.add(processHeader("aoi_to_" + toAOI + "_Transitions_count"));
-                headers.add(processHeader("aoi_to_" + toAOI + "_Proportion_including_self-transitions"));
-                headers.add(processHeader("aoi_to_" + toAOI + "_Proportion_excluding_self-transitions"));
+                headers.add(processHeader("aoi_to_" + toAOI + "_transitions_count"));
+                headers.add(processHeader("aoi_to_" + toAOI + "_proportion_including_self_transitions"));
+                headers.add(processHeader("aoi_to_" + toAOI + "_proportion_excluding_self_transitions"));
             }
             for (int j = 0; j < transitionData.size(); j++) { //Adds transition data to the file if the line matches the current AOI pair (fromAOI to aoiName)
                 List<String> transition = transitionData.get(j);
