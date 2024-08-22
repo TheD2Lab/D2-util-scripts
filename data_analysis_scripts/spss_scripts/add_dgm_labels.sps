@@ -17,7 +17,7 @@ import spss,spssaux
 
 prefix ='wholeScreen_' # prefix. Use empty string if no prefix.
 variables = [
-   f"{prefix}Total_Number_of_Fixations",
+   f"{prefix}total_number_of_fixations",
    f"{prefix}sum_of_all_fixation_duration_s",
    f"{prefix}mean_fixation_duration_s",
    f"{prefix}median_fixation_duration_s",
@@ -25,7 +25,7 @@ variables = [
    f"{prefix}min_fixation_duration_s",
    f"{prefix}max_fixation_duration_s",
    f"{prefix}total_number_of_saccades",
-   f"{prefix}sum_of_all_saccade_length",
+   f"{prefix}sum_of_all_saccade_lengths",
    f"{prefix}mean_saccade_length",
    f"{prefix}median_saccade_length",
    f"{prefix}stdev_of_saccade_lengths",
@@ -55,11 +55,13 @@ variables = [
    f"{prefix}convex_hull_area",
    f"{prefix}stationary_entropy",
    f"{prefix}transition_entropy",
+   f"{prefix}total_number_of_blinks",
    f"{prefix}average_blink_rate_per_minute",
    f"{prefix}total_number_of_valid_recordings",
    f"{prefix}average_pupil_size_of_left_eye",
    f"{prefix}average_pupil_size_of_right_eye",
    f"{prefix}average_pupil_size_of_both_eyes",
+
 ]
 
 labels = [
@@ -101,6 +103,7 @@ labels = [
    f"Convex Hull Area (pixels²)",
    f"Stationary Entropy",
    f"Transition Entropy",
+   f"Total Number of Blinks",
    f"Average Blink Rate Per Minute",
    f"Total Number of Valid Recordings",
    f"Average Pupil Size of Left Eye (mm)",
