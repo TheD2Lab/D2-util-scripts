@@ -1,12 +1,13 @@
 * Encoding: UTF-8.
 BEGIN PROGRAM PYTHON.
-from typing import OrderedDict
+from typing import Any, OrderedDict
 import spss, spssaux, SpssClient
 from pathlib import Path
 import os
 from collections import defaultdict
 import csv
 
+OUTPUT_DIR = '/Users/ashleyjones/Documents/EyeTracking/Statistics/ILS-scatterplots/'
 # temporary file because spss is dumb
 TEMP_FILE = os.path.join(os.path.curdir, "temp_file_with_unique_name.sav")
 
@@ -28,16 +29,16 @@ class GraphParams:
 
 
 class Grouping:
-   def __init__(self, group_var: str, parent_fname: str):
+   def __init__(self, group_var: str, group_fname: str, sub_dir):
       self.group_var = group_var
-      self.parent_fname = parent_fname
+      self.group_fname = group_fname
+      self.sub_dir = sub_dir
 
 
-class Job:
-   def __init__(self, job_id: str, data_files: list[str], category_file: str, key: str = '',
-      test_vars: list[str] = [], groups: list[Grouping] = [],
-      output_dir: str = os.path.curdir, graphInfo: list[GraphParams] = [], end_prefix: str = "",
-      start_var: str = "", end_var: str = ""
+class SingleJob:
+   def __init__(self, output_dir: str, job_id: str, data_files: list[str], category_file: str = '',
+      key: str = '', test_vars: list[str] = [], groups: list[Grouping] = [],
+      end_prefix: str = '', start_var: str = '', end_var: str = "", excel: str =""
    ):
       '''
       Settings for running a pearson analysis and graphing.
@@ -52,6 +53,7 @@ class Job:
       self.end_prefix = end_prefix
       self.start_var = start_var
       self.end_var = end_var
+      self.excel = excel
 
    @property 
    def test_vars(self):
@@ -261,7 +263,7 @@ def find_correlations_values(in_pearson: list[PearsonValues], values: list[int])
    return results
 
 
-def read_sigs_from_csv(in_file) -> list[PearsonValues]:
+def read_sigs_list_from_csv(in_file) -> list[PearsonValues]:
    sig_list = []
    with open(in_file, 'r') as csvfile:
       csv_reader = csv.reader(csvfile)
@@ -271,6 +273,14 @@ def read_sigs_from_csv(in_file) -> list[PearsonValues]:
       
    return sig_list
 
+def read_coefficient_map_from_csv(in_file) -> dict[float, list[PearsonValues]]:
+   res = defaultdict(list)
+   with open(in_file, 'r') as csvfile:
+      csv_reader = csv.reader(csvfile)
+      headers = next(csv_reader)
+      for row in csv_reader:
+         res[float(row[0])].append(PearsonValues(row[1], row[2], float(row[3]), float(row[4])))
+   return res
 
 def graph_scatterplot(x_var, y_var, x_title="", y_title="", title="", group_var="", legend_label="", template=""):
    x_title = x_title if x_title else x_var
@@ -380,26 +390,32 @@ def format_rp(r_value, p_value):
    return title
 
 
-def generate_for_group(grouping: Grouping, test_vars, sig_list, out_dir, data_fname):
+def get_value_label_map(group_var: str) -> dict[float, str]:
    # Get a list of the values in a group
    spss.StartDataStep()
-   varObj = spss.Dataset().varlist[grouping.group_var]
-   vals_labels: dict[int, str] = OrderedDict()
+   varObj = spss.Dataset().varlist[group_var]
+   vals_labels: dict[float, str] = OrderedDict()
    for val, label in varObj.valueLabels.data.items():
       vals_labels[val] = label
    spss.EndDataStep()
 
+   return vals_labels
+
+
+def spss_generate_for_group(grouping: Grouping, test_vars, sig_list, out_dir, data_fname):
+   out_dir = os.path.join(out_dir, grouping.sub_dir)
+   vals_labels = get_value_label_map(grouping.group_var)
    # generate pearson correlation table
-   pearson_output = run_pearson(out_dir, data_fname, grouping.parent_fname, test_vars, grouping.group_var)
+   pearson_output = run_pearson(out_dir, data_fname, grouping.group_fname, test_vars, grouping.group_var)
 
    # highlight and write the individual significant data files
-   csv_fbase = f'sigCorrelations_{grouping.parent_fname}_{data_fname}'
+   csv_fbase = f'sigCorrelations_{grouping.group_fname}_{data_fname}'
    val_list = list(vals_labels)
    find_all_sig_correlations(out_dir, csv_fbase, pearson_output, val_list)
 
    # make a list of the correlations that will be graphed (based on sig_list input)
    corr_of_interest = find_correlations_values(sig_list, val_list)
-   csv_fbase = f'graphCorrelation_{grouping.parent_fname}_{data_fname}.csv'
+   csv_fbase = f'graphCorrelation_{grouping.group_fname}_{data_fname}.csv'
    corr_csv = os.path.join(out_dir, csv_fbase)
    write_multi_sigs_to_csv(corr_csv, corr_of_interest)
 
@@ -414,7 +430,7 @@ def generate_for_group(grouping: Grouping, test_vars, sig_list, out_dir, data_fn
    # del corr_of_interest['all']
    graph_scatter_plots_with_new_labels(grouping.group_var, corr_of_interest, vals_labels)
 
-   graph_fname = os.path.join(out_dir, f'scatterplot_{grouping.parent_fname}_{data_fname}.spv')
+   graph_fname = os.path.join(out_dir, f'scatterplot_{grouping.group_fname}_{data_fname}.spv')
    spss.Submit(f"""
       OUTPUT SAVE OUTFILE = '{graph_fname}'.
       OUTPUT CLOSE *.
@@ -422,64 +438,102 @@ def generate_for_group(grouping: Grouping, test_vars, sig_list, out_dir, data_fn
    """)
 
 
-if __name__ == '__main__':
+def generate_group_from_csvs(out_dir, in_sav, key, coef_csv, group_var: str, group_fname: str, data_fname: str, sub_group: str):
+   coef_map = read_coefficient_map_from_csv(coef_csv)
+   merge_files(in_sav, key)
+   values_labels = get_value_label_map(group_var)
+   graph_scatter_plots_with_new_labels(group_var, coef_map, values_labels)
+   out_fname = os.path.join(out_dir, f'scatterplot_{group_fname}_{data_fname}_{sub_group}.spv')
+   spss.Submit(f"""
+      OUTPUT SAVE OUTFILE = '{out_fname}'.
+      OUTPUT CLOSE *.
+      EXECUTE.
+   """)
 
-   # set how output is saved
-   OUTPUT_DIR = '/Users/ashleyjones/Documents/EyeTracking/Statistics/ILS-scatterplots/'
-   OUTPUT_SUFFIX = ''   # empty string if you don't need a suffix
 
-   CATEGORY_FILE = '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Categorical_Data.sav'
-
-   Path(OUTPUT_DIR).mkdir(exist_ok=True)
-
-   suffix = ""
-
-   jobs = [
-      Job(
-         job_id='xplane',
-         data_files=[
-            # '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav',
-            # '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav',
-            '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'
-         ],
-         category_file=CATEGORY_FILE,
-         key='PID',
-         groups=['pilot_success'],
-         output_dir=os.path.join(OUTPUT_DIR, 'test'),
-         end_prefix='success',
-         start_var='Approach_Score',
-         end_var='MAX_ILS_ABS_Bank_Angle'
-      )
-   ]
-
-   grouping = Grouping(
-      group_var='pilot_success',
-      parent_fname='pilotSuccess',
-
-   )
+def writing_to_excel(output_dir):
+   data_tags = ["AI", "Alt_VSI", "ASI", "RPM", "SSI", "TI_HSI", "Windshield" ,"wholeScreen", "Undefined_Area"]
+   sub_data_tag = 'survey'
+   key = "PID"
+   group_var='pilot_success'
+   group_val=[1, 2]
+   fname_group = "pilotSuccess"
+   pearson_folder = os.path.join(output_dir, 'pilot-success')
+   os.makedirs(pearson_folder, exist_ok=True)
    SpssClient.StartClient() # must have spss communication open to call most functions
+   
+   for tag in data_tags:
+      sub_folder = os.path.join(pearson_folder, tag, 'pearsons-tests')
+      Path(sub_folder).mkdir(parents=True, exist_ok=True)
+      data_files=[
+         f'/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/{tag}_Data.sav',
+         '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav',
+         # '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav',
+         '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Categorical_Data.sav'
+      ]
+      
+      open_data(data_files, key)
 
-   for job in jobs:
-      open_data(job.data_files, job.key)
-      pearson_output = run_pearson(job.output_dir, job.job_id, "", job.test_vars)
-      sig_file = f"sig_correlations_{job.job_id}_{job.end_prefix}"
-      sig_dict = find_all_sig_correlations(job.output_dir, sig_file, pearson_output)
-      sig_list = sig_dict[2][0]
-      merge_files([TEMP_FILE, job.category_file], job.key)
+      var_range = f'{tag}_total_number_of_fixations to Frustration_Score' # Specify range of variables to tests.
+      test_vars = spssaux.VariableDict().expand(var_range) # get a list of variables test
+      pearson_output = run_pearson(sub_folder, fname_group, f'{tag}_{sub_data_tag}', test_vars, group_var)
+      output_doc = SpssClient.GetDesignatedOutputDoc()
+      output_item_list = output_doc.GetOutputItems()
+      i = 0
+      for index in range(output_item_list.Size()):
+         output_item = output_item_list.GetItemAt(index)
+         if output_item.GetDescription() != 'Correlations' or output_item.GetType() != SpssClient.OutputItemType.PIVOT: # get table of interest
+            continue # skip if not correlations table
+         pivot_table = output_item.GetSpecificType()
+         pivot_table.SetVarNamesDisplay(SpssClient.VarNamesDisplay.Names)
+         file_end = f'_{group_val[i]}' if group_val else ''
+         excel = os.path.join(sub_folder, f'pearson_{fname_group}_{tag}_{sub_data_tag}{file_end}')
+         output_item.ExportToDocument(excel, SpssClient.DocExportFormat.SpssFormatXlsx)
+         i += 1
       spss.Submit("""
          OUTPUT CLOSE *.
          EXECUTE.
       """)
-      #sig_list = read_sigs_from_csv('/Users/ashleyjones/Documents/EyeTracking/Statistics/ILS-scatterplots/test/sig_correlations_xplane_success.csv')
-      generate_for_group(
-         grouping=grouping,
-         test_vars=job.test_vars,
-         sig_list=sig_list,
-         out_dir=job.output_dir,
-         data_fname=job.job_id
-      )
-
    # End SPSS Communication
+   SpssClient.StopClient()
+
+
+def run_generate_groups():
+
+   group_fname = 'pilotSuccess'
+   group_dir = 'pilot-success'
+   group_var = 'pilot_success'
+   data_tags = ['AI', 'Alt_VSI', 'ASI', 'RPM', 'SSI', 'TI_HSI', 'Undefined_Area', 'wholeScreen', 'Windshield']
+   sub_group_str = 'survey'
+   key = 'PID'
+   sub_set = 'partial'
+
+   
+   for dtag in data_tags:
+      out_dir = os.path.join(OUTPUT_DIR, group_dir, dtag, 'scatter-plots')
+      os.makedirs(out_dir, exist_ok=True)
+      sav_files=[
+         f'/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/{dtag}_Data.sav',
+         '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav',
+         '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav',
+         '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Categorical_Data.sav'
+      ]
+      coef_csv = f'/Users/ashleyjones/Documents/EyeTracking/Statistics/ILS-scatterplots/{group_dir}/{dtag}/coefficients/graphCoefficients_{group_fname}_{sub_set}_{dtag}_{sub_group_str}.csv'
+
+      generate_group_from_csvs(out_dir, sav_files, key, coef_csv, group_var, group_fname, dtag, sub_group_str)
+
+
+
+if __name__ == '__main__':
+
+   CATEGORY_FILE = '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Categorical_Data.sav'
+
+   Path(OUTPUT_DIR).mkdir(exist_ok=True)
+   
+   SpssClient.StartClient() # must have spss communication open to call most functions
+   
+   run_generate_groups()
+   
    SpssClient.StopClient()
 
    # delete the temp file we were writing to
