@@ -49,12 +49,12 @@ END_VAR = 'MAX_ILS_ABS_Bank_Angle'
 
 
 # set how output is saved
-OUTPUT_DIR = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/population-comparison/'
+OUTPUT_DIR = '/Users/ashleyjones/Documents/EyeTracking/Statistics/population-comparison/'
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 OUTPUT_SUFFIX = 'xplane'
 
 # Graph template file to use (can set scales, colors, etc)
-TEMPLATE_FILE = '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/Graph_Templates/no_decimal_axis.sgt'
+TEMPLATE_FILE = '/Users/ashleyjones/Documents/EyeTracking/Statistics/Graph_Templates/no_decimal_axis.sgt'
 
 # set groups to perform tests for
 FACTORS = [
@@ -103,17 +103,17 @@ FACTORS = [
 # data files run through. Structure each entry as:
 # [Prefix on variable names (leave blank if none), Path to data file]
 DATA_SETS = [
-  # ['AI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
-  # ['Alt_VSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
-  # ['ASI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
-  # ['NoAOI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/No_AOI_Data.sav'],
-  # ['RPM_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
-  # ['SSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
-  # ['TI_HSI_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
-  # ['Window_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Window_AOI_Data.sav'],
-  # ['wholeScreen_', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
-  ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
-  # ['', '/Users/ashleyjones/Documents/CSULB/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav']
+  # ['AI_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/AI_AOI_Data.sav'],
+  # ['Alt_VSI_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Alt_VSI_AOI_Data.sav'],
+  # ['ASI_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/ASI_AOI_Data.sav'],
+  # ['Undefined_Area_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Undefined_Area_Data.sav'],
+  # ['RPM_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/RPM_AOI_Data.sav'],
+  # ['SSI_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/SSI_AOI_Data.sav'],
+  # ['TI_HSI_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/TI_HSI_AOI_Data.sav'],
+  # ['Windshield_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Windshield_AOI_Data.sav'],
+  # ['wholeScreen_', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/wholeScreen_Data.sav'],
+  ['', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Xplane_Data.sav'],
+  # ['', '/Users/ashleyjones/Documents/EyeTracking/Statistics/SAV Data Files/Survey_Data.sav']
 ]
 
 def run_anova(factor: TestFactor, variables, prefix):
